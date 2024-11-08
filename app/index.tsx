@@ -34,6 +34,7 @@ const index = () => {
   );
 
 
+
   return (
     <ImageBackground
       style={{ width, height }}

@@ -108,8 +108,9 @@ const App = () => {
 
   async function playFlap() {
     const { sound } = await Audio.Sound.createAsync(
-      require("../assets/audio/flap.mp3"),{
-        volume: 0.4
+      require("../assets/audio/flap.mp3"),
+      {
+        volume: 0.4,
       }
     );
     setSound(sound);
@@ -119,8 +120,9 @@ const App = () => {
 
   async function playPoint() {
     const { sound } = await Audio.Sound.createAsync(
-      require("../assets/audio/point.wav"),{
-        volume: 0.4
+      require("../assets/audio/point.wav"),
+      {
+        volume: 0.4,
       }
     );
     setPointSound(sound);
@@ -130,7 +132,8 @@ const App = () => {
 
   async function playHit() {
     const { sound } = await Audio.Sound.createAsync(
-      require("../assets/audio/sfx_hit.wav"),{
+      require("../assets/audio/sfx_hit.wav"),
+      {
         volume: 0.2,
       }
     );
@@ -280,7 +283,6 @@ const App = () => {
     }
   };
 
-  console.log(highScore);
   useAnimatedReaction(
     () => gameOver.value,
     (currentValue, previousValue) => {
@@ -313,10 +315,8 @@ const App = () => {
   });
 
   const gesture = Gesture.Tap().onStart(() => {
-    console.log("tap");
     if (gameOver.value) {
-    //   restartGame();
-
+      //   restartGame();
     } else {
       birdYVeleocity.value = JUMP_FORCE;
       runOnJS(playFlap)();
@@ -344,7 +344,6 @@ const App = () => {
   const fontStyle = {
     fontFamily,
     fontSize: 40,
-    // fontWeight: 'bold',
   };
   const font = matchFont(fontStyle);
 
@@ -517,7 +516,6 @@ const App = () => {
                 >
                   <Pressable
                     onPress={() => {
-                      console.log("Try Again pressed");
                       restartGame();
                     }}
                     style={{
@@ -540,7 +538,7 @@ const App = () => {
 
                   <Pressable
                     onPress={() => {
-                      console.log("Home pressed");
+                     
                       setIsGameOver(false);
 
                       //   router.back();
