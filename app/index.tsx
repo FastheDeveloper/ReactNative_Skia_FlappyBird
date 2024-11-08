@@ -41,43 +41,44 @@ const App = () => {
   const pipeup = useImage(require("../assets/sprites/pipe-red-top.png"));
   const base = useImage(require("../assets/sprites/base.png"));
   const [score, setScore] = useState<number>(0);
-  const x = useSharedValue(width);
+  const pipeX = useSharedValue(width);
+
   const birdY = useSharedValue(height / 3);
   const birdYVeleocity = useSharedValue(0);
-  const birdPosition = {
-    x: width / 7,
-  };
+  const birdX =width / 7
+ 
   const gameOver = useSharedValue(false);
   const pipeWidth = 104;
   const pipeHeigh = 640;
-  const birdCenterX = useDerivedValue(() => birdPosition.x + 37);
-  const pipeOffset = 0;
 
-  const obstacles = useDerivedValue(() => {
-    const allObstacles = [];
+
+  const pipeOffset = useSharedValue(0);
+  const topPipeY = useDerivedValue(() => pipeOffset.value - 320);
+  const bottomPipeY = useDerivedValue(() => height - 330 + pipeOffset.value);
+
+  const obstacles = useDerivedValue(() => [
+
     //add bottom pipe
-    allObstacles.push({
-      x: x.value,
-      y: height - 330 + pipeOffset,
+{
+      x: pipeX.value,
+      y: bottomPipeY.value,
       h: pipeHeigh,
       w: pipeWidth,
-    });
+    },
 
     //add top pipe
-    allObstacles.push({
-      x: x.value,
-      y: pipeOffset - 320,
+   {
+      x: pipeX.value,
+      y: topPipeY.value,
       h: pipeHeigh,
       w: pipeWidth,
-    });
+    }
 
-    return allObstacles;
-  });
+]);
 
-  const birdCenterY = useDerivedValue(() => birdY.value + 29);
 
   const movePipes = () => {
-    x.value = withRepeat(
+    pipeX.value = withRepeat(
       withSequence(
         withTiming(-150, { duration: 3000, easing: Easing.linear }),
         withTiming(width, { duration: 0 })
@@ -91,10 +92,15 @@ const App = () => {
 
   //score system
   useAnimatedReaction(
-    () => x.value,
+    () => pipeX.value,
 
     (currentValue, previousValue) => {
-      const middle = birdPosition.x;
+      const middle =birdX;
+
+      //change pipe gap position
+      if (previousValue && currentValue < -100 && previousValue > -100) {
+        pipeOffset.value = Math.random() * 400 - 200;
+      }
       if (
         currentValue !== previousValue &&
         previousValue &&
@@ -126,6 +132,11 @@ const App = () => {
   useAnimatedReaction(
     () => birdY.value,
     (currentValue, previousValue) => {
+
+        const center={
+            x:birdX+ 37,
+            y:birdY.value + 29
+        }
       if (currentValue > height - 120 || currentValue < 0) {
         // console.log("end game ")
         gameOver.value = true;
@@ -134,7 +145,7 @@ const App = () => {
 
       const isColliding = obstacles.value.some((rect) =>
         isPOintCollidingWithRect(
-          { x: birdCenterX.value, y: birdCenterY.value },
+          center,
           rect
         )
       );
@@ -170,7 +181,7 @@ const App = () => {
     () => gameOver.value,
     (currentValue, previousValue) => {
       if (currentValue && !previousValue) {
-        cancelAnimation(x);
+        cancelAnimation(pipeX);
       }
     }
   );
@@ -179,7 +190,7 @@ const App = () => {
     "worklet";
     birdY.value = height / 3;
     birdYVeleocity.value = 0;
-    x.value = width;
+    pipeX.value = width;
     gameOver.value = false;
     runOnJS(setScore)(0);
     runOnJS(movePipes)();
@@ -235,16 +246,16 @@ const App = () => {
 
           <Image
             image={pipeup}
-            y={pipeOffset - 320}
-            x={x}
+            y={topPipeY}
+            x={pipeX}
             width={pipeWidth}
             height={pipeHeigh}
             fit={"contain"}
           />
           <Image
             image={pipedown}
-            y={height - 330 + pipeOffset}
-            x={x}
+            y={bottomPipeY}
+            x={pipeX}
             width={pipeWidth}
             height={pipeHeigh}
             fit={"contain"}
@@ -254,7 +265,7 @@ const App = () => {
             <Image
               image={bird}
               y={birdY}
-              x={birdPosition.x}
+              x={birdX}
               width={74}
               height={58}
               fit={"contain"}
