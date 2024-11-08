@@ -55,7 +55,9 @@ const App = () => {
   const pipeOffset = useSharedValue(0);
   const topPipeY = useDerivedValue(() => pipeOffset.value - 320);
   const bottomPipeY = useDerivedValue(() => height - 330 + pipeOffset.value);
-
+const pipeSpeed=useDerivedValue(()=>{
+    return interpolate(score,[0,20],[1,4])
+})
   const obstacles = useDerivedValue(() => [
 
     //add bottom pipe
@@ -78,13 +80,13 @@ const App = () => {
 
 
   const movePipes = () => {
-    pipeX.value = withRepeat(
+    pipeX.value = 
       withSequence(
-        withTiming(-150, { duration: 3000, easing: Easing.linear }),
+        withTiming(width, { duration: 0 }),
+        withTiming(-150, { duration: 3000 /pipeSpeed.value, easing: Easing.linear }),
         withTiming(width, { duration: 0 })
-      ),
-      -1
-    );
+      )
+ 
   };
   useEffect(() => {
     movePipes();
@@ -100,6 +102,9 @@ const App = () => {
       //change pipe gap position
       if (previousValue && currentValue < -100 && previousValue > -100) {
         pipeOffset.value = Math.random() * 400 - 200;
+        cancelAnimation(pipeX)
+        runOnJS(movePipes)();
+
       }
       if (
         currentValue !== previousValue &&
@@ -192,6 +197,7 @@ const App = () => {
     birdYVeleocity.value = 0;
     pipeX.value = width;
     gameOver.value = false;
+
     runOnJS(setScore)(0);
     runOnJS(movePipes)();
   };
