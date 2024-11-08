@@ -1,12 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Canvas,
   useImage,
   Image,
   rotateX,
   Group,
+  Text,
+  matchFont,
 } from "@shopify/react-native-skia";
-import { useWindowDimensions } from "react-native";
+import { Platform, useWindowDimensions } from "react-native";
 import {
   useSharedValue,
   withTiming,
@@ -16,13 +18,14 @@ import {
   useFrameCallback,
   useDerivedValue,
   interpolate,
-  Extrapolation
+  Extrapolation,
+  useAnimatedReaction,
+  runOnJS,
 } from "react-native-reanimated";
 import {
   GestureHandlerRootView,
   GestureDetector,
   Gesture,
-  
 } from "react-native-gesture-handler";
 
 const Gravity = 1000;
@@ -34,25 +37,13 @@ const App = () => {
   const pipedown = useImage(require("../assets/sprites/pipe-red.png"));
   const pipeup = useImage(require("../assets/sprites/pipe-red-top.png"));
   const base = useImage(require("../assets/sprites/base.png"));
-
+const [score,setScore]=useState<number>(0)
   const x = useSharedValue(width);
   const birdY = useSharedValue(height / 3);
   const birdYVeleocity = useSharedValue(0);
-const birdTransform=useDerivedValue(()=>{
-    return [{ rotate:interpolate(birdYVeleocity.value,[-500,500],[-0.5,0.5],Extrapolation.CLAMP) }]
-})
-
-const birdOrigin=useDerivedValue(()=>{
-    return { x: (width / 4)+37, y: birdY.value +29}
-})
-    useFrameCallback(({ timeSincePreviousFrame: dt }) => {
-      if (!dt) {
-        return;
-      }
-      birdY.value = birdY.value + (birdYVeleocity.value * dt) / 1000;
-      birdYVeleocity.value = birdYVeleocity.value + (Gravity * dt) / 1000;
-    });
-
+ const birdPosition={
+    x:width / 7
+ }
   useEffect(() => {
     x.value = withRepeat(
       withSequence(
@@ -63,12 +54,56 @@ const birdOrigin=useDerivedValue(()=>{
     );
   }, []);
 
+  useAnimatedReaction(
+    () =>  x.value,
+     
+    (currentValue, previousValue) => {
+        const middle=birdPosition.x
+      if (currentValue !== previousValue &&previousValue && currentValue<=middle && previousValue > middle) {
+        // setScore((s)=>s++) wont workcus state is on JS thread and useAnimated is on UI thread
+        runOnJS(setScore)(score+1)
+      }
+    }
+  );
+
+
+  useFrameCallback(({ timeSincePreviousFrame: dt }) => {
+    if (!dt) {
+      return;
+    }
+    birdY.value = birdY.value + (birdYVeleocity.value * dt) / 1000;
+    birdYVeleocity.value = birdYVeleocity.value + (Gravity * dt) / 1000;
+  });
+
   const gesture = Gesture.Tap().onStart(() => {
     birdYVeleocity.value = JUMP_FORCE;
   });
 
-  const pipeOffset = 0;
+  const birdTransform = useDerivedValue(() => {
+    return [
+      {
+        rotate: interpolate(
+          birdYVeleocity.value,
+          [-500, 500],
+          [-0.5, 0.5],
+          Extrapolation.CLAMP
+        ),
+      },
+    ];
+  });
 
+  const birdOrigin = useDerivedValue(() => {
+    return { x: width / 4 + 37, y: birdY.value + 29 };
+  });
+
+  const pipeOffset = 0;
+  const fontFamily = Platform.select({ ios: 'Helvetica', default: 'serif' });
+  const fontStyle = {
+    fontFamily,
+    fontSize: 40,
+    // fontWeight: 'bold',
+  };
+  const font = matchFont(fontStyle);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector gesture={gesture}>
@@ -95,14 +130,11 @@ const birdOrigin=useDerivedValue(()=>{
             fit={"contain"}
           />
 
-          <Group
-            transform={birdTransform}
-            origin={birdOrigin}
-          >
+          <Group transform={birdTransform} origin={birdOrigin}>
             <Image
               image={bird}
               y={birdY}
-              x={width / 7}
+              x={birdPosition.x}
               width={74}
               height={58}
               fit={"contain"}
@@ -117,6 +149,13 @@ const birdOrigin=useDerivedValue(()=>{
             height={150}
             fit={"cover"}
           />
+         <Text
+            x={width / 2 - 30}
+            y={100}
+            text={score.toString()}
+            font={font}
+          />
+
         </Canvas>
       </GestureDetector>
     </GestureHandlerRootView>
