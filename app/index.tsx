@@ -56,7 +56,7 @@ const App = () => {
   const topPipeY = useDerivedValue(() => pipeOffset.value - 320);
   const bottomPipeY = useDerivedValue(() => height - 330 + pipeOffset.value);
 const pipeSpeed=useDerivedValue(()=>{
-    return interpolate(score,[0,20],[1,4])
+    return interpolate(score,[0,20],[1,2])
 })
   const obstacles = useDerivedValue(() => [
 
